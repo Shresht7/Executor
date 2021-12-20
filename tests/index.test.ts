@@ -137,3 +137,12 @@ test('[execute] Should execute tasks in the order of specification', () => {
     executor.addTask('Add7', () => counter = counter + 7)
     executor.execute('Add7', 'Multiply3').finally(() => assert.equal(counter, 21))
 })
+
+test('[execute] Should perform tasks in correct sequence', () => {
+    const executor = new Executor()
+    let counter = 1
+    executor.addTask('Add1', () => counter = counter + 1, ['Add7'])
+    executor.addTask('Multiply3', () => counter = counter * 3)
+    executor.addTask('Add7', () => counter = counter + 7, ['Multiply3'])
+    executor.execute('Add1').finally(() => assert.equal(counter, 11))
+})

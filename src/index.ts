@@ -78,6 +78,26 @@ class Executor extends EventEmitter {
         return process.nextTick(() => this._runTask(sequence, taskNumber + 1))
     }
 
+    /** Resolves the sequence of operations */
+    private _resolveSequence = (...taskNames: string[]): string[] => {
+        const sequence: string[] = []
+        taskNames.forEach(taskName => {
+            const task = this.getTask(taskName)
+
+            //  If the task is null or has already been included in the sequence, return early
+            if (!task || sequence.includes(taskName)) { return }
+
+            //  Resolve recursive dependencies
+            if (task.dependencies) {
+                sequence.push(...this._resolveSequence(...task.dependencies))
+            }
+
+            //  Add task to the sequence
+            sequence.push(taskName)
+        })
+        return sequence
+    }
+
     /**
      * Executes all provided tasks
      * @param taskNames Variadic array of tasks to execute. (executes all if empty)
@@ -86,26 +106,23 @@ class Executor extends EventEmitter {
         if (this._isRunning) { return }     //  Short-circuit if already running
 
         this._isRunning = true
-        const tasks: string[] = []
 
         //  Collect all tasks
         if (!taskNames || taskNames.length <= 0) {  //  If no arguments were passed in, run all tasks
-            for (const task in this._tasks) {
-                tasks.push(task)
+            for (const taskName in this._tasks) {
+                taskNames.push(taskName)
             }
-        } else {    //  Collect only specified tasks
-            taskNames.forEach(task => tasks.push(task))
         }
 
-
-        //TODO: Build taskQueue based on dependencies
+        //  Determine the sequence of operations
+        const sequence = this._resolveSequence(...taskNames)
 
         //  Start execution process
         this.emit('start')
 
         //  Initialize the task queue in the next tick. This ensures event listeners are registered before execution
         try {
-            process.nextTick(() => resolve(this._runTask(tasks, 0)))
+            process.nextTick(() => resolve(this._runTask(sequence, 0)))
         } catch (err) {
             reject(err)
         }
