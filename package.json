@@ -6,7 +6,8 @@
   "scripts": {
     "tsc": "tsc",
     "dev": "tsc -w",
-    "start": "node lib"
+    "start": "node lib",
+    "test": "npx ts-node tests"
   },
   "author": "Shresht7",
   "license": "MIT",

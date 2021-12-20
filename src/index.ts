@@ -58,3 +58,7 @@ class Executor extends EventEmitter {
     }
 
 }
+
+//---------------------
+export default Executor
+//---------------------
