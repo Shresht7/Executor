@@ -107,3 +107,33 @@ test('[removeTask] Should remove the given task from the list', () => {
     executor.removeTask(taskName)
     assert.equal(executor.getTask(taskName), null)
 })
+
+//  EXECUTE
+//  =======
+
+test('[execute] Should execute all tasks if no arguments are provided', () => {
+    const executor = new Executor()
+    let counter = 0
+    executor.addTask('Add1', () => counter = counter + 1)
+    executor.addTask('Multiply3', () => counter = counter * 3)
+    executor.addTask('Add7', () => counter = counter + 7)
+    executor.execute().finally(() => assert.equal(counter, 10))
+})
+
+test('[execute] Should only execute given tasks', () => {
+    const executor = new Executor()
+    let counter = 0
+    executor.addTask('Add1', () => counter = counter + 1)
+    executor.addTask('Multiply3', () => counter = counter * 3)
+    executor.addTask('Add7', () => counter = counter + 7)
+    executor.execute('Multiply3', 'Add7').finally(() => assert.equal(counter, 7))
+})
+
+test('[execute] Should execute tasks in the order of specification', () => {
+    const executor = new Executor()
+    let counter = 0
+    executor.addTask('Add1', () => counter = counter + 1)
+    executor.addTask('Multiply3', () => counter = counter * 3)
+    executor.addTask('Add7', () => counter = counter + 7)
+    executor.execute('Add7', 'Multiply3').finally(() => assert.equal(counter, 21))
+})

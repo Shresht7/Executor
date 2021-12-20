@@ -78,7 +78,11 @@ class Executor extends EventEmitter {
         return process.nextTick(() => this._runTask(sequence, taskNumber + 1))
     }
 
-    execute = (...taskNames: string[]) => {
+    /**
+     * Executes all provided tasks
+     * @param taskNames Variadic array of tasks to execute. (executes all if empty)
+     */
+    execute = (...taskNames: string[]) => new Promise<boolean | void>((resolve, reject) => {
         if (this._isRunning) { return }     //  Short-circuit if already running
 
         this._isRunning = true
@@ -100,10 +104,15 @@ class Executor extends EventEmitter {
         this.emit('start')
 
         //  Initialize the task queue in the next tick. This ensures event listeners are registered before execution
-        process.nextTick(() => this._runTask(tasks, 0))
+        try {
+            process.nextTick(() => resolve(this._runTask(tasks, 0)))
+        } catch (err) {
+            reject(err)
+        }
+    })
 
-        return this
-    }
+    /** Alias for execute */
+    run = this.execute
 
 }
 
